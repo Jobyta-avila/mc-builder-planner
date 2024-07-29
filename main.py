@@ -1,21 +1,38 @@
 import pygame
-import sys
-from OpenGL.GL import *
-from OpenGL.GLU import *
+from grid2d import draw_grid
 
+# Inicializa Pygame
 pygame.init()
-screen = pygame.display.set_mode((800, 600), pygame.DOUBLEBUF | pygame.OPENGL)
-pygame.display.set_caption("MC Build Planner")
 
-gluPerspective(45, (800/600), 0.1, 50.0)
-glTranslatef(0.0, 0.0, -5)
+# Configura la pantalla
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption('Grid2D')
 
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+BLOCK_SIZE = 20
 
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-    pygame.display.flip()
-    pygame.time.wait(10)
+def main():
+    clock = pygame.time.Clock()
+    running = True
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        # Rellena la pantalla con un color de fondo
+        screen.fill((0, 0, 0))
+
+        # Dibuja la cuadrícula
+        draw_grid(screen, BLOCK_SIZE)
+
+        # Actualiza la pantalla
+        pygame.display.flip()
+
+        # Controla los FPS
+        clock.tick(30)
+
+    pygame.quit()
+
+if __name__ == '__main__':
+    main()
