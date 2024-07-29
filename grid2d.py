@@ -57,7 +57,7 @@ class Grid2D:
                 self.offset_y += dy
                 self.last_mouse_x, self.last_mouse_y = event.pos
 
-
     def update(self, event):
         self.handle_zoom(event)
         self.handle_drag(event)
+
