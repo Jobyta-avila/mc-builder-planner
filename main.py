@@ -1,63 +1,61 @@
 import pygame
-from grid2d import Grid2D
+import sys
+import logging
 from menu import Menu
+from grid2d import Grid2D
 
-# Inicializa Pygame
-pygame.init()
-
-
-
-# Configura la pantalla para que sea redimensionable y tenga un tamaño por defecto
-
-pygame.display.set_caption('Minecraft Build Planner')
+# Configurar el registro
+logging.basicConfig(level=logging.DEBUG)
 
 def main():
-
-    # Obtiene el tamaño de la pantalla
-    info = pygame.display.Info()
-    WIDTH, HEIGHT = 800, 600  # Tamaño por defecto para una ventana redimensionable
-    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-
-    # Inicializa la cuadrícula y el menú
-    grid = Grid2D(screen)
-    menu = Menu(screen)
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)  # Añade pygame.RESIZABLE
+    pygame.display.set_caption("Minecraft Builder Planner")
     clock = pygame.time.Clock()
-    running = True
+    
+    menu = Menu(screen, font_size=18)
+    grid2d = Grid2D(screen, grid_size=20)
 
+    running = True
     while running:
         for event in pygame.event.get():
+            logging.debug(f"Evento: {event}")
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.VIDEORESIZE:
-                # Actualiza la pantalla y las dimensiones del menú y la cuadrícula
                 screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
-                grid.update_screen_size(screen)
-                menu.update_menu_rect()
+                menu.update_screen_size(screen)
+                grid2d.update_screen_size(screen)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Clic izquierdo
+                    if not menu.menu_rect.collidepoint(event.pos):
+                        grid2d.place_block(event.pos, menu.selected_block)
+                menu.handle_mouse_click(event)
+            elif event.type == pygame.MOUSEMOTION:
+                menu.handle_mouse_motion(event)
+                grid2d.handle_drag(event)
+            elif event.type == pygame.MOUSEBUTTONUP:
+                menu.handle_mouse_release(event)
+                grid2d.handle_drag(event)
+            elif event.type == pygame.MOUSEWHEEL:
+                menu.handle_mouse_scroll(event)
+                grid2d.handle_zoom(event)
+            elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+                menu.handle_keypress(event)
+        
+        menu.update()
+        grid2d.selected_block = menu.selected_block  # Actualiza el bloque seleccionado
 
-            # Manejar eventos para la cuadrícula y el menú
-            grid.update(event)
-            menu.handle_mouse_motion(event)
-            menu.handle_mouse_click(event)
-            menu.handle_mouse_release(event)
-            menu.handle_mouse_scroll(event)
-            menu.handle_keypress(event)
-
-        # Rellena la pantalla con el fondo blanco
-        screen.fill((255, 255, 255))
-
-        # Dibuja la cuadrícula
-        grid.draw_grid()
-
-        # Dibuja el menú
+        screen.fill((255, 255, 255))  # Color de fondo blanco
+        grid2d.draw_grid()
         menu.draw()
-
-        # Actualiza la pantalla
         pygame.display.flip()
-
-        # Controla los FPS
-        clock.tick(30)
+        clock.tick(60)
 
     pygame.quit()
+    sys.exit()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
+
+
