@@ -138,13 +138,15 @@ class Menu:
             self.dragging_scrollbar = False
 
     def handle_mouse_scroll(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.menu_open and event.button == 4:  # Rueda hacia arriba
-                self.scroll_offset = max(0, self.scroll_offset - self.scroll_speed)
-            elif self.menu_open and event.button == 5:  # Rueda hacia abajo
-                total_list_height = sum(len(blocks) for blocks in self.filtered_blocks.values()) * (self.font.get_sized_height() + 2)
-                max_scroll_offset = max(0, total_list_height - (self.menu_rect.height - self.input_box.height - 40))
-                self.scroll_offset = min(max_scroll_offset, self.scroll_offset + self.scroll_speed)
+     if event.type == pygame.MOUSEWHEEL:
+        logging.debug(f"Desplazamiento del ratón en el menú: {event.y}")
+        if event.y > 0:  # Rueda hacia arriba
+            self.scroll_offset = max(0, self.scroll_offset - self.scroll_speed)
+        elif event.y < 0:  # Rueda hacia abajo
+            total_list_height = sum(len(blocks) for blocks in self.filtered_blocks.values()) * (self.font.get_sized_height() + 2)
+            max_scroll_offset = max(0, total_list_height - (self.menu_rect.height - self.input_box.height - 40))
+            self.scroll_offset = min(max_scroll_offset, self.scroll_offset + self.scroll_speed)
+        logging.debug(f"Offset de scroll del menú actualizado: {self.scroll_offset}")
 
     def handle_keypress(self, event):
         if event.type == pygame.KEYDOWN and self.input_box_active:

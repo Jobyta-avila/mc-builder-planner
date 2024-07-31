@@ -3,6 +3,7 @@ import sys
 import logging
 from menu import Menu
 from grid2d import Grid2D
+from toolbar import Toolbar
 
 # Configurar el registro
 logging.basicConfig(level=logging.DEBUG)
@@ -12,12 +13,20 @@ def main():
     screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)  # Añade pygame.RESIZABLE
     pygame.display.set_caption("Minecraft Builder Planner")
     clock = pygame.time.Clock()
-    
+
     menu = Menu(screen, font_size=18)
     grid2d = Grid2D(screen, grid_size=20)
+    toolbar = Toolbar(screen)
+
+    # Añadir botones a la barra de herramientas
+    toolbar.add_button('assets/icons8-eraser-64.png', 'erase')  # Ruta relativa al icono de borrado
+    toolbar.add_button('assets/icons8-fill-color-50.png', 'fill')  # Ruta relativa al icono de rellenar
+    toolbar.add_button('assets/icons8-brush-80.png', 'brush')  # Ruta relativa al icono de pincel
+    toolbar.add_button('assets/icons8-cursor-80.png', 'cursor')  # Ruta relativa al icono de puntero
 
     running = True
     while running:
+        mouse_pos = pygame.mouse.get_pos()  # Obtener la posición actual del ratón
         for event in pygame.event.get():
             logging.debug(f"Evento: {event}")
             if event.type == pygame.QUIT:
@@ -26,29 +35,50 @@ def main():
                 screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
                 menu.update_screen_size(screen)
                 grid2d.update_screen_size(screen)
+                toolbar.update_screen_size(screen)
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # Clic izquierdo
-                    if not menu.menu_rect.collidepoint(event.pos):
-                        grid2d.place_block(event.pos, menu.selected_block)
-                menu.handle_mouse_click(event)
+                selected_tool = toolbar.handle_mouse_click(event)
+                if selected_tool:
+                    logging.debug(f"Herramienta seleccionada desde toolbar: {selected_tool}")
+                if selected_tool == 'erase':
+                    grid2d.selected_block = 'erase'  # Selecciona la herramienta de borrado
+                    logging.debug(f"grid2d.selected_block establecido en 'erase' para borrador")
+                elif selected_tool == 'fill':
+                    grid2d.fill_blocks(grid2d.selected_block)  # Llama a la función fill_blocks
+                elif event.button == 1:  # Clic izquierdo
+                    if not menu.menu_rect.collidepoint(event.pos) and not toolbar.rect.collidepoint(event.pos):
+                        if toolbar.selected_tool == 'brush':
+                            grid2d.place_block(event.pos, grid2d.selected_block)
+                        elif toolbar.selected_tool == 'cursor':
+                            grid2d.handle_drag(event, toolbar.selected_tool)
+                        elif toolbar.selected_tool == 'erase':
+                            grid2d.place_block(event.pos, 'erase')
+                    menu.handle_mouse_click(event)
             elif event.type == pygame.MOUSEMOTION:
                 menu.handle_mouse_motion(event)
-                grid2d.handle_drag(event)
+                grid2d.handle_drag(event, toolbar.selected_tool)
             elif event.type == pygame.MOUSEBUTTONUP:
                 menu.handle_mouse_release(event)
-                grid2d.handle_drag(event)
+                grid2d.handle_drag(event, toolbar.selected_tool)
             elif event.type == pygame.MOUSEWHEEL:
-                menu.handle_mouse_scroll(event)
-                grid2d.handle_zoom(event)
+                logging.debug(f"Rueda del ratón: {event.y}, posición del ratón: {mouse_pos}")
+                if menu.menu_rect.collidepoint(mouse_pos):
+                    menu.handle_mouse_scroll(event)
+                else:
+                    grid2d.handle_zoom(event)
             elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
                 menu.handle_keypress(event)
-        
+
+        # Actualizar la visibilidad de la barra de herramientas
+        toolbar.update_visibility(mouse_pos)
+
         menu.update()
-        grid2d.selected_block = menu.selected_block  # Actualiza el bloque seleccionado
+        grid2d.selected_block = 'erase' if toolbar.selected_tool == 'erase' else menu.selected_block  # Actualiza el bloque seleccionado
 
         screen.fill((255, 255, 255))  # Color de fondo blanco
         grid2d.draw_grid()
         menu.draw()
+        toolbar.draw()
         pygame.display.flip()
         clock.tick(60)
 
@@ -57,5 +87,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
