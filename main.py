@@ -4,6 +4,7 @@ import logging
 from menu import Menu
 from grid2d import Grid2D
 from toolbar import Toolbar
+from block_colors import load_block_icons
 
 # Configurar el registro
 logging.basicConfig(level=logging.DEBUG)
@@ -11,18 +12,22 @@ logging.basicConfig(level=logging.DEBUG)
 def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)  # Añade pygame.RESIZABLE
-    pygame.display.set_caption("Minecraft Builder Planner")
+    pygame.display.set_caption("MC Builder Planner")
     clock = pygame.time.Clock()
+
+
+    BLOCK_ICONS_LOADED = load_block_icons()
 
     menu = Menu(screen, font_size=18)
     grid2d = Grid2D(screen, grid_size=20)
+    grid2d.set_icons(BLOCK_ICONS_LOADED)
     toolbar = Toolbar(screen)
 
     # Añadir botones a la barra de herramientas
-    toolbar.add_button('assets/icons8-eraser-64.png', 'erase')  # Ruta relativa al icono de borrado
-    toolbar.add_button('assets/icons8-fill-color-50.png', 'fill')  # Ruta relativa al icono de rellenar
-    toolbar.add_button('assets/icons8-brush-80.png', 'brush')  # Ruta relativa al icono de pincel
-    toolbar.add_button('assets/icons8-cursor-80.png', 'cursor')  # Ruta relativa al icono de puntero
+    toolbar.add_button('assets/icons8-eraser-64.png', 'erase')
+    toolbar.add_button('assets/icons8-fill-color-50.png', 'fill') 
+    toolbar.add_button('assets/icons8-brush-80.png', 'brush') 
+    toolbar.add_button('assets/icons8-cursor-80.png', 'cursor') 
 
     running = True
     while running:

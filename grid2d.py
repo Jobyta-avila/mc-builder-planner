@@ -1,10 +1,6 @@
 import pygame
 import logging
-from block_colors import BLOCK_COLORS  # Importa el diccionario de colores
-
-GRID_COLOR = (0, 0, 0)  # Negro
-SELECTED_COLOR = (255, 0, 0)  # Rojo para indicar el bloque seleccionado por defecto
-ERASE_COLOR = (255, 255, 255)  # Blanco para borrar bloques
+from block_colors import BLOCK_COLORS
 
 class Grid2D:
     def __init__(self, screen, grid_size=20):
@@ -22,6 +18,10 @@ class Grid2D:
         self.last_mouse_x = 0
         self.last_mouse_y = 0
         self.selected_block = None  # Añade esto para almacenar el bloque seleccionado
+        self.icons = {}
+
+    def set_icons(self, icons):
+        self.icons = icons
 
     def update_screen_size(self, screen):
         self.screen = screen
@@ -34,7 +34,13 @@ class Grid2D:
                 pygame.draw.rect(self.screen, (200, 200, 200), rect, 1)
 
         for (x, y), block in self.blocks.items():
-            pygame.draw.rect(self.screen, block['color'], (x * self.block_size + self.offset_x, y * self.block_size + self.offset_y, self.block_size, self.block_size))
+            if 'icon' in block:
+                icon = self.icons.get(block['type'], None)
+                if icon:
+                    icon = pygame.transform.scale(icon, (self.block_size, self.block_size))
+                    self.screen.blit(icon, (x * self.block_size + self.offset_x, y * self.block_size + self.offset_y))
+            elif 'color' in block:
+                pygame.draw.rect(self.screen, block['color'], (x * self.block_size + self.offset_x, y * self.block_size + self.offset_y, self.block_size, self.block_size))
 
     def place_block(self, pos, block_type):
         x, y = pos
@@ -45,19 +51,27 @@ class Grid2D:
                 del self.blocks[(grid_x, grid_y)]
                 logging.debug(f"Bloque en ({grid_x}, {grid_y}) eliminado")
         else:
-            block_color = BLOCK_COLORS.get(block_type, SELECTED_COLOR)  # Usa el color del bloque o el color seleccionado por defecto
-            self.blocks[(grid_x, grid_y)] = {'type': block_type, 'color': block_color}
-            logging.debug(f"Bloque en ({grid_x}, {grid_y}) actualizado con color {block_color}")
+            if block_type in self.icons:
+                self.blocks[(grid_x, grid_y)] = {'type': block_type, 'icon': self.icons[block_type]}
+                logging.debug(f"Icono del bloque en ({grid_x}, {grid_y}) actualizado con tipo {block_type}")
+            else:
+                block_color = BLOCK_COLORS.get(block_type, (255, 255, 255))  # Usa el color del bloque o blanco por defecto
+                self.blocks[(grid_x, grid_y)] = {'type': block_type, 'color': block_color}
+                logging.debug(f"Bloque en ({grid_x}, {grid_y}) actualizado con tipo {block_type}")
 
     def fill_blocks(self, block_type):
-        block_color = BLOCK_COLORS.get(block_type, SELECTED_COLOR)
         width, height = self.screen.get_size()
         for x in range(self.offset_x % self.block_size, width, self.block_size):
             for y in range(self.offset_y % self.block_size, height, self.block_size):
                 grid_x = x // self.block_size
                 grid_y = y // self.block_size
-                self.blocks[(grid_x, grid_y)] = {'type': block_type, 'color': block_color}
-        logging.debug(f"Rellenado completo con color {block_color}")
+                if block_type in self.icons:
+                    self.blocks[(grid_x, grid_y)] = {'type': block_type, 'icon': self.icons[block_type]}
+                    logging.debug(f"Icono del bloque en ({grid_x}, {grid_y}) actualizado con tipo {block_type}")
+                else:
+                    block_color = BLOCK_COLORS.get(block_type, (255, 255, 255))
+                    self.blocks[(grid_x, grid_y)] = {'type': block_type, 'color': block_color}
+                    logging.debug(f"Bloque en ({grid_x}, {grid_y}) actualizado con tipo {block_type}")
 
     def handle_zoom(self, event):
         if event.type == pygame.MOUSEWHEEL:

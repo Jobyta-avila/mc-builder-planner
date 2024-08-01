@@ -1,3 +1,5 @@
+import pygame
+
 BLOCK_COLORS = {
     'Stone': (128, 128, 128),
     'Granite': (176, 114, 84),
@@ -72,3 +74,19 @@ BLOCK_COLORS = {
     'Warped Planks': (27, 134, 134)
     # Añade más bloques y sus colores aquí...
 }
+
+BLOCK_ICONS = {
+    'Stone': 'assets/stone-block.png',
+    # Añade otros bloques aquí con sus rutas de iconos
+}
+
+def load_block_icons():
+    icons = {}
+    for block, path in BLOCK_ICONS.items():
+        try:
+            icon = pygame.image.load(path).convert_alpha()
+            icons[block] = icon
+        except pygame.error as e:
+            print(f"Error cargando el icono para {block}: {e}")
+    return icons
+
