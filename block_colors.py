@@ -77,6 +77,7 @@ BLOCK_COLORS = {
 
 BLOCK_ICONS = {
     'Stone': 'assets/stone-block.png',
+    'Granite': 'assets/granite-block.png'
     # Añade otros bloques aquí con sus rutas de iconos
 }
 
