@@ -41,11 +41,11 @@ def main():
     # Cargar los iconos de bloques después de inicializar Pygame
     BLOCK_ICONS_LOADED = load_block_icons()
 
-    menu = Menu(screen, font_size=18)  # Ajustar la posición vertical del menú
-    grid2d = Grid2D(screen, grid_size=20, offset_y=100)  # Ajustar la posición vertical del grid
-    grid2d.set_icons(BLOCK_ICONS_LOADED)  # Asignar los iconos cargados al grid
-    toolbar = Toolbar(screen, height=60, offset_y=40)  # Ajustar la posición vertical de la barra de herramientas
     main_menu = MainMenu(screen)
+    menu = Menu(screen, font_size=18)  # No ajuste de posición vertical necesario
+    grid2d = Grid2D(screen, grid_size=20, offset_y=40)  # Ajustar la posición vertical del grid
+    grid2d.set_icons(BLOCK_ICONS_LOADED)  # Asignar los iconos cargados al grid
+    toolbar = Toolbar(screen, height=60, margin_left=300)  # Ajustar la posición y tamaño del toolbar
 
     # Añadir botones a la barra de herramientas
     toolbar.add_button('assets/icons8-eraser-64.png', 'erase')  # Ruta relativa al icono de borrado
@@ -56,7 +56,6 @@ def main():
     running = True
     while running:
         mouse_pos = pygame.mouse.get_pos()  # Obtener la posición actual del ratón
-
         for event in pygame.event.get():
             logging.debug(f"Evento: {event}")
             if event.type == pygame.QUIT:
@@ -115,8 +114,6 @@ def main():
         if show_start_menu:
             start_menu.draw(screen)
         elif show_grid2d:
-            # Actualizar la visibilidad de la barra de herramientas
-            menu.update()
             grid2d.selected_block = 'erase' if toolbar.selected_tool == 'erase' else menu.selected_block  # Actualiza el bloque seleccionado
 
             main_menu.draw()
@@ -132,3 +129,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

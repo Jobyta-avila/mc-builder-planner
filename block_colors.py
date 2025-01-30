@@ -90,4 +90,3 @@ def load_block_icons():
         except pygame.error as e:
             print(f"Error cargando el icono para {block}: {e}")
     return icons
-

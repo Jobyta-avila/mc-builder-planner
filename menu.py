@@ -8,9 +8,9 @@ MENU_COLOR = (200, 200, 200)  # Gris claro
 TEXT_COLOR = (0, 0, 0)  # Negro
 INPUT_COLOR = (255, 255, 255)  # Blanco
 INPUT_BORDER_COLOR = (0, 0, 0)  # Negro
-SCROLL_BAR_COLOR = (150, 150, 150)  # Gris medio
 PLACEHOLDER_COLOR = (180, 180, 180)  # Gris claro para el texto del indicador
 SELECTED_COLOR = (255, 0, 0)  # Rojo para indicar el bloque seleccionado
+SCROLL_BAR_COLOR = (150, 150, 150)  # Gris medio
 
 # Definir las categorías y los bloques
 CATEGORIES = {
@@ -40,13 +40,13 @@ CATEGORIES = {
 }
 
 class Menu:
-    def __init__(self, screen, font_size=24):
+    def __init__(self, screen, font_size=24, offset_y=0):
         self.screen = screen
         self.font = pygame.freetype.SysFont(None, font_size)
         self.menu_width = 300
-        self.menu_open = False
-        self.menu_rect = pygame.Rect(0, 0, self.menu_width, screen.get_height())
-        self.input_box = pygame.Rect(10, 10, self.menu_width - 20, 30)
+        self.menu_open = True  # Mantener el menú siempre visible
+        self.menu_rect = pygame.Rect(0, offset_y, self.menu_width, screen.get_height() - offset_y)
+        self.input_box = pygame.Rect(10, offset_y + 10, self.menu_width - 20, 30)
         self.input_box_active = False
         self.text = ''
         self.filtered_blocks = CATEGORIES  # Inicializar con categorías
@@ -75,12 +75,12 @@ class Menu:
             pygame.draw.rect(self.screen, MENU_COLOR, self.menu_rect)
             pygame.draw.rect(self.screen, INPUT_COLOR, self.input_box)
             pygame.draw.rect(self.screen, INPUT_BORDER_COLOR, self.input_box, 2)
-            
+
             if self.input_box_active and self.text == '':
                 self.font.render_to(self.screen, (self.input_box.x + 5, self.input_box.y + 5), "Type to search...", PLACEHOLDER_COLOR)
             else:
                 self.font.render_to(self.screen, (self.input_box.x + 5, self.input_box.y + 5), self.text, TEXT_COLOR)
-            
+
             total_list_height = sum(len(blocks) for blocks in self.filtered_blocks.values()) * (self.font.get_sized_height() + 2)
             visible_height = self.menu_rect.height - self.input_box.height - 40
             if total_list_height > 0:
@@ -91,16 +91,16 @@ class Menu:
             else:
                 self.scrollbar_rect = pygame.Rect(self.menu_rect.width - self.scrollbar_width, self.input_box.height + 20, self.scrollbar_width, visible_height)
 
-            y = self.input_box.bottom + 10
+            y = self.input_box.bottom + 10 - self.scroll_offset
             for category, blocks in self.filtered_blocks.items():
-                self.font.render_to(self.screen, (10, y - self.scroll_offset), category, TEXT_COLOR)
+                self.font.render_to(self.screen, (10, y), category, TEXT_COLOR)
                 y += self.font.get_sized_height() + 2
                 for block in blocks:
-                    block_rect = pygame.Rect(20, y - self.scroll_offset, self.menu_width - 40, self.font.get_sized_height() + 2)
+                    block_rect = pygame.Rect(20, y, self.menu_width - 40, self.font.get_sized_height() + 2)
                     if self.selected_block == block:
                         pygame.draw.rect(self.screen, SELECTED_COLOR, block_rect)
                     block_color = BLOCK_COLORS.get(block, TEXT_COLOR)  # Usa el color del bloque o el color de texto por defecto si no se encuentra
-                    self.font.render_to(self.screen, (30, y - self.scroll_offset), block, block_color)
+                    self.font.render_to(self.screen, (30, y), block, block_color)
                     y += self.font.get_sized_height() + 2
 
     def handle_mouse_motion(self, event):
@@ -113,40 +113,34 @@ class Menu:
                 visible_height = self.menu_rect.height - self.input_box.height - 40
                 max_scroll_offset = max(0, total_list_height - visible_height)
                 self.scroll_offset = min(max(0, self.scroll_offset + dy * (total_list_height / visible_height)), max_scroll_offset)
-            else:
-                if self.menu_rect.collidepoint(event.pos):
-                    self.menu_open = True
-                else:
-                    self.menu_open = False
 
     def handle_mouse_click(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.menu_open:
-                if self.input_box.collidepoint(event.pos):
-                    self.input_box_active = True
-                else:
-                    self.input_box_active = False
-                if self.scrollbar_rect and self.scrollbar_rect.collidepoint(event.pos):
-                    self.dragging_scrollbar = True
-                    self.scrollbar_start_y = event.pos[1]
-                else:
-                    self.select_block(event.pos)
-                logging.debug(f"Click en {event.pos} - Bloque seleccionado: {self.selected_block}")
+            if self.input_box.collidepoint(event.pos):
+                self.input_box_active = True
+            else:
+                self.input_box_active = False
+            if self.scrollbar_rect and self.scrollbar_rect.collidepoint(event.pos):
+                self.dragging_scrollbar = True
+                self.scrollbar_start_y = event.pos[1]
+            else:
+                self.select_block(event.pos)
+            logging.debug(f"Click en {event.pos} - Bloque seleccionado: {self.selected_block}")
 
     def handle_mouse_release(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
             self.dragging_scrollbar = False
 
     def handle_mouse_scroll(self, event):
-     if event.type == pygame.MOUSEWHEEL:
-        logging.debug(f"Desplazamiento del ratón en el menú: {event.y}")
-        if event.y > 0:  # Rueda hacia arriba
-            self.scroll_offset = max(0, self.scroll_offset - self.scroll_speed)
-        elif event.y < 0:  # Rueda hacia abajo
-            total_list_height = sum(len(blocks) for blocks in self.filtered_blocks.values()) * (self.font.get_sized_height() + 2)
-            max_scroll_offset = max(0, total_list_height - (self.menu_rect.height - self.input_box.height - 40))
-            self.scroll_offset = min(max_scroll_offset, self.scroll_offset + self.scroll_speed)
-        logging.debug(f"Offset de scroll del menú actualizado: {self.scroll_offset}")
+        if event.type == pygame.MOUSEWHEEL:
+            logging.debug(f"Desplazamiento del ratón en el menú: {event.y}")
+            if event.y > 0:  # Rueda hacia arriba
+                self.scroll_offset = max(0, self.scroll_offset - self.scroll_speed)
+            elif event.y < 0:  # Rueda hacia abajo
+                total_list_height = sum(len(blocks) for blocks in self.filtered_blocks.values()) * (self.font.get_sized_height() + 2)
+                max_scroll_offset = max(0, total_list_height - (self.menu_rect.height - self.input_box.height - 40))
+                self.scroll_offset = min(max_scroll_offset, self.scroll_offset + self.scroll_speed)
+            logging.debug(f"Offset de scroll del menú actualizado: {self.scroll_offset}")
 
     def handle_keypress(self, event):
         if event.type == pygame.KEYDOWN and self.input_box_active:
@@ -193,4 +187,3 @@ class Menu:
                     logging.debug(f"Bloque seleccionado: {self.selected_block}")
                     return
                 y += self.font.get_sized_height() + 2
-
